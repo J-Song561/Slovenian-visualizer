@@ -1,0 +1,103 @@
+function setEx(s) {
+  document.getElementById('eng-input').value = s;
+  analyze();
+}
+
+document.getElementById('eng-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') analyze();
+});
+
+async function analyze() {
+  const eng = document.getElementById('eng-input').value.trim();
+  if (!eng) return;
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('viz-btn');
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>Translating and analyzing...</div>';
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sentence: eng })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    render(data);
+
+  } catch(e) {
+    out.innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function posClass(pos) {
+  const map = {
+    verb: 'pos-verb', noun: 'pos-noun', adjective: 'pos-adjective',
+    pronoun: 'pos-pronoun', preposition: 'pos-preposition',
+    adverb: 'pos-adverb', particle: 'pos-particle'
+  };
+  return map[pos] || 'pos-particle';
+}
+
+function chunkClass(role) {
+  const map = {
+    predicate: 'chunk-predicate', subject: 'chunk-subject',
+    object: 'chunk-object', recipient: 'chunk-recipient'
+  };
+  return map[role] || 'chunk-other';
+}
+
+function render(data) {
+  const out = document.getElementById('output');
+
+  const chunksHTML = data.chunks.map(chunk => {
+    const wordsHTML = chunk.words.map(w => {
+      const details = [
+        w.case   !== 'none' ? `<strong>Case:</strong> ${w.case}`     : '',
+        w.number !== 'none' ? `<strong>Number:</strong> ${w.number}` : '',
+        w.gender !== 'none' ? `<strong>Gender:</strong> ${w.gender}` : '',
+        w.person !== 'none' ? `<strong>Person:</strong> ${w.person}` : '',
+        w.tense  !== 'none' ? `<strong>Tense:</strong> ${w.tense}`   : '',
+      ].filter(Boolean).join('<br>');
+
+      return `
+        <div class="word-wrap">
+          <div class="word-pill">
+            <span class="word-text">${w.slovenian}</span>
+            <span class="word-pos ${posClass(w.pos)}">${w.pos}</span>
+          </div>
+          <div class="hover-card">
+            <div class="hc-word">${w.slovenian}</div>
+            <div class="hc-base">base: <span>${w.base_form}</span></div>
+            <div class="hc-info">${w.analysis}</div>
+            ${details ? `<div class="hc-info" style="margin-top:4px">${details}</div>` : ''}
+            <div class="hc-change">${w.change}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const label = chunk.role.charAt(0).toUpperCase() + chunk.role.slice(1);
+    return `
+      <div class="chunk ${chunkClass(chunk.role)}">
+        <div class="chunk-label">${label}</div>
+        ${wordsHTML}
+      </div>`;
+  }).join('');
+
+  const notesHTML = (data.grammar_notes || [])
+    .map(n => `<span class="rule-pill">${n}</span>`)
+    .join('');
+
+  out.innerHTML = `
+    <div class="result-area">
+      <div class="section-label">English</div>
+      <div class="english-display">${data.english}</div>
+      <div class="section-label">Slovenian — hover each word</div>
+      <div class="chunks-row">${chunksHTML}</div>
+      ${notesHTML ? `<div class="section-label">Grammar rules fired</div><div class="rule-pills">${notesHTML}</div>` : ''}
+    </div>`;
+}

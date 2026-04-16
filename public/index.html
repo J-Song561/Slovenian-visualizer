@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Slovenian Visualizer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <main class="app">
+    <h1 class="app-title">Slovenian sentence visualizer</h1>
+    <p class="app-sub">Type any English sentence — see it translated, chunked, and annotated</p>
+
+    <div class="input-row">
+      <input type="text" id="eng-input" placeholder="e.g. I write a letter to my boyfriend." value="I write a letter to my boyfriend." />
+      <button id="viz-btn" onclick="analyze()">Visualize</button>
+    </div>
+
+    <div class="examples-row">
+      <span class="try-label">try:</span>
+      <button class="ex-btn" onclick="setEx('She reads a book with her sister.')">She reads a book with her sister.</button>
+      <button class="ex-btn" onclick="setEx('We two are going to Ljubljana.')">We two are going to Ljubljana.</button>
+      <button class="ex-btn" onclick="setEx('I do not have a dog.')">I do not have a dog.</button>
+      <button class="ex-btn" onclick="setEx('He gave it to her.')">He gave it to her.</button>
+    </div>
+
+    <div id="output"></div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
