@@ -245,3 +245,24 @@ body {
 
 .result-area { animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.word-sound {
+  font-size: 8px;
+  color: #bbb;
+  margin-top: 1px;
+}
+.word-pill:hover .word-sound { color: #378ADD; }
+
+.listen-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid #e0e0dc;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  margin-bottom: 1.2rem;
+  transition: all 0.15s;
+}
+.listen-btn:hover { background: #f0f0ee; color: #1a1a18; }

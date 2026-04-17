@@ -66,9 +66,10 @@ function render(data) {
 
       return `
         <div class="word-wrap">
-          <div class="word-pill">
+          <div class="word-pill" onclick="speak('${w.slovenian}')" title="click to hear">
             <span class="word-text">${w.slovenian}</span>
             <span class="word-pos ${posClass(w.pos)}">${w.pos}</span>
+            <span class="word-sound">▶</span>
           </div>
           <div class="hover-card">
             <div class="hc-word">${w.slovenian}</div>
@@ -96,8 +97,20 @@ function render(data) {
     <div class="result-area">
       <div class="section-label">English</div>
       <div class="english-display">${data.english}</div>
+      <div class="section-label">Slovenian — hover each word, click to hear</div>
+      <button class="listen-btn" onclick="speak('${data.slovenian}')">
+        ▶ hear full sentence
+      </button>
+      <div class="chunks-row">${chunksHTML}</div>
       <div class="section-label">Slovenian — hover each word</div>
       <div class="chunks-row">${chunksHTML}</div>
       ${notesHTML ? `<div class="section-label">Grammar rules fired</div><div class="rule-pills">${notesHTML}</div>` : ''}
     </div>`;
+}
+
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'sl-SI';  // Slovenian locale
+  utter.rate = 0.9;       // slightly slower, easier to follow
+  speechSynthesis.speak(utter);
 }
