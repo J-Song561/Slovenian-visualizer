@@ -49,6 +49,7 @@ Return this exact JSON structure:
           "person": "1st|2nd|3rd|none",
           "tense": "present|past|future|none",
           "analysis": "short grammatical description max 8 words",
+          "meaning": "English meaning of this word in this context",
           "change": "base_form → this_form: reason max 12 words"
         }
       ]

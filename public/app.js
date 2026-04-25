@@ -24,6 +24,18 @@ async function speak(text) {
   }
 }
 
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    // 복사 완료 피드백
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅';
+    setTimeout(() => btn.textContent = '📋', 1500);
+  } catch(e) {
+    console.error('Copy failed:', e);
+  }
+}
+
 function setEx(s) {
   document.getElementById('eng-input').value = s;
   analyze();
@@ -100,6 +112,7 @@ function render(data) {
           <div class="hover-card">
             <div class="hc-word">${w.slovenian}</div>
             <div class="hc-base">base: <span>${w.base_form}</span></div>
+            <div class="hc-meaning">meaning: <span>${w.meaning || ''}</span></div>
             <div class="hc-info">${w.analysis}</div>
             ${details ? `<div class="hc-info" style="margin-top:4px">${details}</div>` : ''}
             <div class="hc-change">${w.change}</div>
@@ -123,8 +136,14 @@ function render(data) {
     <div class="result-area">
       <div class="section-label">English</div>
       <div class="english-display">${data.english}</div>
+
       <div class="section-label">Slovenian — click each word to hear</div>
-      <button class="listen-btn" onclick="speak('${data.slovenian}')">🔊 hear full sentence</button>
+      <div class="slovenian-display">
+        ${data.slovenian}
+        <button class="copy-btn" id="copy-btn" onclick="copyText('${data.slovenian.replace(/'/g, "\\'")}')" title="copy">📋</button>
+      </div>
+      <button class="listen-btn" onclick="speak('${data.slovenian.replace(/'/g, "\\'")}')">🔊 hear full sentence</button>
+
       <div class="chunks-row">${chunksHTML}</div>
       ${notesHTML ? `<div class="section-label">Grammar rules fired</div><div class="rule-pills">${notesHTML}</div>` : ''}
     </div>`;
