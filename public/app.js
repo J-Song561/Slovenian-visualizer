@@ -1,3 +1,29 @@
+let currentAudio = null;
+
+async function speak(text) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  try {
+    const res = await fetch('/api/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    if (!res.ok) throw new Error('TTS failed');
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.play();
+  } catch(e) {
+    console.error('TTS error:', e);
+  }
+}
+
 function setEx(s) {
   document.getElementById('eng-input').value = s;
   analyze();
@@ -69,7 +95,7 @@ function render(data) {
           <div class="word-pill" onclick="speak('${w.slovenian}')" title="click to hear">
             <span class="word-text">${w.slovenian}</span>
             <span class="word-pos ${posClass(w.pos)}">${w.pos}</span>
-            <span class="word-sound">▶</span>
+            <span class="word-sound">🔊</span>
           </div>
           <div class="hover-card">
             <div class="hc-word">${w.slovenian}</div>
@@ -97,20 +123,9 @@ function render(data) {
     <div class="result-area">
       <div class="section-label">English</div>
       <div class="english-display">${data.english}</div>
-      <div class="section-label">Slovenian — hover each word, click to hear</div>
-      <button class="listen-btn" onclick="speak('${data.slovenian}')">
-        ▶ hear full sentence
-      </button>
-      <div class="chunks-row">${chunksHTML}</div>
-      <div class="section-label">Slovenian — hover each word</div>
+      <div class="section-label">Slovenian — click each word to hear</div>
+      <button class="listen-btn" onclick="speak('${data.slovenian}')">🔊 hear full sentence</button>
       <div class="chunks-row">${chunksHTML}</div>
       ${notesHTML ? `<div class="section-label">Grammar rules fired</div><div class="rule-pills">${notesHTML}</div>` : ''}
     </div>`;
-}
-
-function speak(text) {
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'sl-SI';  // Slovenian locale
-  utter.rate = 0.9;       // slightly slower, easier to follow
-  speechSynthesis.speak(utter);
 }
