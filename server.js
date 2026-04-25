@@ -6,9 +6,13 @@ import { dirname, join } from 'path';
 import { exec } from 'child_process';
 import { readFile, unlink } from 'fs/promises';
 import { randomUUID } from 'crypto';
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 
 dotenv.config();
 
+const elevenlabs = new ElevenLabsClient({
+  apiKey: process.env.ELEVENLABS_API_KEY
+});
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -74,27 +78,29 @@ app.post('/api/speak', async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: 'No text provided' });
 
-  const id = randomUUID();
-  const outPath = `/tmp/${id}.mp3`;
-
   try {
-    await new Promise((resolve, reject) => {
-      const safe = text.replace(/'/g, "\\'").replace(/"/g, '\\"');
-      exec(
-        `python3 -c "from gtts import gTTS; gTTS('${safe}', lang='sl').save('${outPath}')"`,
-        (err) => err ? reject(err) : resolve()
-      );
-    });
+    const audio = await elevenlabs.textToSpeech.convert(
+      'JBFqnCBsd6RMkjVDRZzb', // George — free tier default voice
+      {
+        text: text,
+        modelId: 'eleven_multilingual_v2',
+        outputFormat: 'mp3_44100_128'
+      }
+    );
 
-    const audio = await readFile(outPath);
+    // stream을 buffer로 변환
+    const chunks = [];
+    for await (const chunk of audio) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+
     res.set('Content-Type', 'audio/mpeg');
-    res.send(audio);
+    res.send(buffer);
 
   } catch(e) {
     console.error(e);
     res.status(500).json({ error: e.message });
-  } finally {
-    unlink(outPath).catch(() => {});
   }
 });
 
