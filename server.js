@@ -3,6 +3,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { exec } from 'child_process';
+import { readFile, unlink } from 'fs/promises';
+import { randomUUID } from 'crypto';
 
 dotenv.config();
 
@@ -71,35 +74,27 @@ app.post('/api/speak', async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: 'No text provided' });
 
+  const id = randomUUID();
+  const outPath = `/tmp/${id}.mp3`;
+
   try {
-    const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': process.env.ELEVENLABS_API_KEY
-      },
-      body: JSON.stringify({
-        text: text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75
-        }
-      })
+    await new Promise((resolve, reject) => {
+      const safe = text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+      exec(
+        `python3 -c "from gtts import gTTS; gTTS('${safe}', lang='sl').save('${outPath}')"`,
+        (err) => err ? reject(err) : resolve()
+      );
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err);
-    }
-
-    const audioBuffer = await response.arrayBuffer();
+    const audio = await readFile(outPath);
     res.set('Content-Type', 'audio/mpeg');
-    res.send(Buffer.from(audioBuffer));
+    res.send(audio);
 
   } catch(e) {
     console.error(e);
     res.status(500).json({ error: e.message });
+  } finally {
+    unlink(outPath).catch(() => {});
   }
 });
 
